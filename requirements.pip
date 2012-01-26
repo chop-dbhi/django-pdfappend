@@ -4,6 +4,7 @@
 #
 #     pip install -U -r requirements.pip
 
+# You may need to install libevent
 # Core requirements
 django
 markdown
@@ -14,9 +15,7 @@ requests
 django-restlib
 cython
 greenlet
-# Not sure why, but PyPi install will not compile on OS X at least
-hg+https://bitbucket.org/denis/gevent
-
+gevent
 
 # Database Drivers, the Python stdlib has support for SQLite
 # psycopg2
