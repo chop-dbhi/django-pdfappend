@@ -84,10 +84,10 @@ setup(
                         'requests',
                         'pypdf',
                         'cython',
-                        'greenlet'],
+                        'greenlet',
+                        'django-restlib'],
 
-    dependency_links = ['https://github.com/bruth/django-restlib.git',
-                        'https://bitbucket.org/denis/gevent'],
+    dependency_links = ['https://bitbucket.org/denis/gevent'],
     
     packages = packages,
     cmdclass = cmdclasses,

@@ -11,7 +11,7 @@ south
 django-grappelli
 pypdf
 requests
-git+https://github.com/bruth/django-restlib.git
+django-restlib
 cython
 greenlet
 # Not sure why, but PyPi install will not compile on OS X at least
