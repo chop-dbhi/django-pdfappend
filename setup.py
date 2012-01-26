@@ -85,10 +85,9 @@ setup(
                         'pypdf',
                         'cython',
                         'greenlet',
+                        'gevent',
                         'django-restlib'],
 
-    dependency_links = ['https://bitbucket.org/denis/gevent'],
-    
     packages = packages,
     cmdclass = cmdclasses,
 
