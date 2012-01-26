@@ -72,7 +72,7 @@ version = __import__(BASE_PACKAGE).get_version()
 
 setup(
     version = version,
-    name = '-pdfappend',
+    name = 'pdfappend',
     author = 'Jeffrey Miller',
     author_email = 'millerjm1@email.chop.edu',
     description = 'A django app for appending multiple PDFs into a single PDF ',
