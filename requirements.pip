@@ -7,9 +7,6 @@
 # You may need to install libevent-dev
 # Core requirements
 django
-markdown
-south
-django-grappelli
 pypdf
 requests
 django-restlib
