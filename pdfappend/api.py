@@ -15,9 +15,9 @@ class PDFAppender(resources.Resource):
         # getlist here will return a list of all the query string paramaters
         # named 'pdfs'
         urls = request.GET.getlist("pdfs")
-        if !urls:
+        if not urls:
             items = request.GET.items()
-            items.sort(key=lambda x: return x[0])
+            items.sort(key=lambda x: x[0])
             urls = []
             for key, value in items:
                urls.append(value)
