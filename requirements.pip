@@ -4,12 +4,9 @@
 #
 #     pip install -U -r requirements.pip
 
-# You may need to install libevent
+# You may need to install libevent-dev
 # Core requirements
 django
-markdown
-south
-django-grappelli
 pypdf
 requests
 django-restlib
