@@ -2,7 +2,7 @@ from restlib import resources
 from django.http import HttpResponse
 from pyPdf import PdfFileWriter, PdfFileReader
 import StringIO
-from requests import async
+from requests
 
 class PDFAppender(resources.Resource):
 
@@ -22,10 +22,9 @@ class PDFAppender(resources.Resource):
             for key, value in items:
                urls.append(value)
 
-        requests = [async.get(url) for url in urls]
-        responses = async.map(requests)
+        responses = [requests.get(url) for url in urls]
+        
         master_pdf = PdfFileWriter()
-
         # Iterate over each response and add it to the master PDF
         for response in responses:
             # pyPDF needs a file like object
