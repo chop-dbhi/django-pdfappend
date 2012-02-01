@@ -2,7 +2,7 @@ from restlib import resources
 from django.http import HttpResponse
 from pyPdf import PdfFileWriter, PdfFileReader
 import StringIO
-from requests
+import requests
 
 class PDFAppender(resources.Resource):
 
