@@ -83,9 +83,6 @@ setup(
     install_requires = ['distribute',
                         'requests',
                         'pypdf',
-                        'cython',
-                        'greenlet',
-                        'gevent',
                         'django-restlib'],
 
     packages = packages,
