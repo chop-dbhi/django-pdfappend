@@ -10,9 +10,6 @@ django
 pypdf
 requests
 django-restlib
-cython
-greenlet
-gevent
 
 # Database Drivers, the Python stdlib has support for SQLite
 # psycopg2
