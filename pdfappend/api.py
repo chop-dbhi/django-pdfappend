@@ -1,4 +1,5 @@
-from django.core.cache import cache
+from django.conf import settings
+from django.core.cache import get_cache
 from restlib import resources
 from django.http import HttpResponse
 from pyPdf import PdfFileWriter, PdfFileReader
@@ -7,6 +8,14 @@ from email.utils import formatdate
 import time
 import StringIO
 import requests
+
+cache_enable = False
+if settings.CACHES.has_key("pdfappend"):
+    cache_enabled = True
+
+headers = lambda h: {
+            "If-None-Match": h.get('etag'),
+            "If-Modified-Since": h.get('date')} if h else None
 
 class PDFAppender(resources.Resource):
 
@@ -26,36 +35,47 @@ class PDFAppender(resources.Resource):
             for key, value in items:
                urls.append(value)
 
-        # We have all the urls, check cache
-        headers = lambda h: {"If-None-Match":h.get('etag'),
-                "If-Modified-Since":h.get('date')} if h else None
-
-        urls_cache = {url : hit for url, hit in zip(urls, [cache.get(url) for urls in url])}
-        urls_needed = {u : True for u,h in urls_cache.items() if h == None or !h['expires']}
-        urls_headers = [(u, headers(url_cache[u])) for u in urls_needed.keys()]
+        if cache_enabled:
+            cache = get_cache('pdfappend')
+            urls_cache = dict((url, hit) for url, hit in zip(urls,
+                [cache.get(url) for urls in url]))
+            urls_needed = dict((url,True) for url, hit in urls_cache.items()
+                    if hit == None or !hit['expires'])
+            urls_headers = [(url, headers(url_cache[url]))
+                    for url in urls_needed.keys()]
+        else:
+            urls_headers = [(url, {}) for url in urls]
 
         s = requests.session()
-        responses = [s.get(url, prefetch=True, headers=h) for u, h in urls_headers]
+        responses = [s.get(url, prefetch=True, headers=h) 
+                for u, h in urls_headers]
 
         self.cache_responses(responses)
 
-        response_cache = {r.url : r for r in responses}
+        response_cache = dict((r.url, r) for r in responses)
 
         master_pdf = PdfFileWriter()
-        # Iterate over each response and add it to the master PDF
+
+        # Iterate over each pdf and add it to the master PDF
         for url in urls:
-            bytes = None
-            if urls_needed.has_key(url):
-                if response_cache[url].status_code == 200:
-                    bytes = response_cache[url].content
-                elif response_cache[url].status_code = 304:
-                    bytes = urls_cache[url]['data']
+            if cache_enabled:
+                if urls_needed.has_key(url):
+                    if response_cache[url].status_code == 200:
+                        bytes = response_cache[url].content
+                    elif response_cache[url].status_code = 304:
+                        bytes = urls_cache[url]['data']
+                    else:
+                        # Log a failed response?
+                        continue
                 else:
-                    # Log a failed response
-                    continue
+                    bytes = urls_cache[url]['data']
             else:
-                bytes = urls_cache[url]['data']
-            
+                # Verify request succeeded
+                if not response_cache[url].status_code == 200:
+                    # Log failed response?
+                    continue
+                bytes = response_cache[url].content
+
             # pyPDF needs a file like object
             input = PdfFileReader(StringIO.StringIO(bytes))
 
@@ -86,8 +106,3 @@ class PDFAppender(resources.Resource):
                         'etag':response.headers['Etag']
                         'date':formatdate()
                     })
-
-
-
-
-
