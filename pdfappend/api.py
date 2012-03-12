@@ -9,7 +9,7 @@ import time
 import StringIO
 import requests
 
-cache_enable = False
+cache_enabled = False
 if settings.CACHES.has_key("pdfappend"):
     cache_enabled = True
 
@@ -39,18 +39,19 @@ class PDFAppender(resources.Resource):
             cache = get_cache('pdfappend')
             urls_cache = dict((url, hit) for url, hit in zip(urls,
                 [cache.get(url) for urls in url]))
-            urls_needed = dict((url,True) for url, hit in urls_cache.items()
-                    if hit == None or !hit['expires'])
+            urls_needed = dict((url,True) for url, hit in urls_cache.items() if
+                    (hit == None or not hit['expires']))
             urls_headers = [(url, headers(url_cache[url]))
                     for url in urls_needed.keys()]
         else:
             urls_headers = [(url, {}) for url in urls]
 
         s = requests.session()
-        responses = [s.get(url, prefetch=True, headers=h) 
+        responses = [s.get(u, prefetch=True, headers=h) 
                 for u, h in urls_headers]
 
-        self.cache_responses(responses)
+        if cache_enabled: 
+            self.cache_responses(responses, cache)
 
         response_cache = dict((r.url, r) for r in responses)
 
@@ -62,7 +63,7 @@ class PDFAppender(resources.Resource):
                 if urls_needed.has_key(url):
                     if response_cache[url].status_code == 200:
                         bytes = response_cache[url].content
-                    elif response_cache[url].status_code = 304:
+                    elif response_cache[url].status_code == 304:
                         bytes = urls_cache[url]['data']
                     else:
                         # Log a failed response?
@@ -87,7 +88,7 @@ class PDFAppender(resources.Resource):
         master_pdf.write(output)
         return output
 
-    def cache_responses(self, response):
+    def cache_responses(self, responses, cache):
         cacheable = [r for r in responses if r.status_code == 200]
         for r in cacheable:
             obj = {}
@@ -103,6 +104,6 @@ class PDFAppender(resources.Resource):
                 cache.set(response.request.url,
                     {
                         'data':response.content,
-                        'etag':response.headers['Etag']
+                        'etag':response.headers['Etag'],
                         'date':formatdate()
                     })
