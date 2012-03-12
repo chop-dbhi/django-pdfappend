@@ -13,6 +13,8 @@ cache_enabled = False
 if settings.CACHES.has_key("pdfappend"):
     cache_enabled = True
 
+# quick little snippet figure out which http headers 
+# to use depending on what values are in the cache
 headers = lambda h: dict((attr,h.get(v))
     for attr, v in
     [("If-None-Match", "etag"), ("If-Modified-Since", "date")]
@@ -38,12 +40,14 @@ class PDFAppender(resources.Resource):
 
         if cache_enabled:
             cache = get_cache('pdfappend')
+            # Create dictionary of url:<cache value>
             urls_cache = dict((url, hit) for url, hit in zip(urls,
                 [cache.get(url) for url in urls]))
-
+            # Determine which urls need to be requested
             urls_needed = dict((url,True) for url, hit in urls_cache.items() if
                     hit == None or not hit.has_key('expires'))
-
+            # Create array of [(url, <header dict>)] for urls that need to be
+            # requested
             urls_headers = [(url, headers(urls_cache[url]))
                     for url in urls_needed.keys()]
         else:
