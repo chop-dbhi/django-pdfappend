@@ -13,9 +13,10 @@ cache_enabled = False
 if settings.CACHES.has_key("pdfappend"):
     cache_enabled = True
 
-headers = lambda h: {
-            "If-None-Match": h.get('etag'),
-            "If-Modified-Since": h.get('date')} if h else None
+headers = lambda h: dict((attr,h.get(v))
+    for attr, v in
+    [("If-None-Match", "etag"), ("If-Modified-Since", "date")]
+    if h and h.get(v))
 
 class PDFAppender(resources.Resource):
 
@@ -38,10 +39,12 @@ class PDFAppender(resources.Resource):
         if cache_enabled:
             cache = get_cache('pdfappend')
             urls_cache = dict((url, hit) for url, hit in zip(urls,
-                [cache.get(url) for urls in url]))
+                [cache.get(url) for url in urls]))
+
             urls_needed = dict((url,True) for url, hit in urls_cache.items() if
-                    (hit == None or not hit['expires']))
-            urls_headers = [(url, headers(url_cache[url]))
+                    hit == None or not hit.has_key('expires'))
+
+            urls_headers = [(url, headers(urls_cache[url]))
                     for url in urls_needed.keys()]
         else:
             urls_headers = [(url, {}) for url in urls]
@@ -53,7 +56,7 @@ class PDFAppender(resources.Resource):
         if cache_enabled: 
             self.cache_responses(responses, cache)
 
-        response_cache = dict((r.url, r) for r in responses)
+        response_cache = dict((r.request.url, r) for r in responses)
 
         master_pdf = PdfFileWriter()
 
@@ -93,7 +96,7 @@ class PDFAppender(resources.Resource):
         for r in cacheable:
             obj = {}
             if r.headers['Expires']:
-                cache.set(response.request.url,
+                cache.set(r.request.url,
                     {
                         'expires': True,
                         'data': response.content
@@ -101,9 +104,9 @@ class PDFAppender(resources.Resource):
                     mktime_tz(parsedate_tz(r.headers['Expires'])) -
                     time.time())
             else:
-                cache.set(response.request.url,
+                cache.set(r.request.url,
                     {
-                        'data':response.content,
-                        'etag':response.headers['Etag'],
+                        'data':r.content,
+                        'etag':r.headers['Etag'],
                         'date':formatdate()
                     })
