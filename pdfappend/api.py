@@ -7,7 +7,7 @@ from email.utils import parsedate_tz, mktime_tz
 from email.utils import formatdate
 import time
 import StringIO
-import requests
+from requests import async
 
 cache_enabled = False
 if settings.CACHES.has_key("pdfappend"):
@@ -53,9 +53,10 @@ class PDFAppender(resources.Resource):
         else:
             urls_headers = [(url, {}) for url in urls]
 
-        s = requests.session()
-        responses = [s.get(u, prefetch=True, headers=h) 
-                for u, h in urls_headers]
+        reqs = [async.get(u, prefetch=True, headers=h) for u, h in
+                urls_headers]
+
+        responses = async.map(reqs)
 
         if cache_enabled: 
             self.cache_responses(responses, cache)
