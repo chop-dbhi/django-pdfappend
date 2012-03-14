@@ -7,7 +7,8 @@ from email.utils import parsedate_tz, mktime_tz
 from email.utils import formatdate
 import time
 import StringIO
-import requests
+from requests import async
+from multiprocess import Process, Queue
 
 cache_enabled = False
 if settings.CACHES.has_key("pdfappend"):
@@ -20,6 +21,14 @@ headers = lambda h: dict((attr,h.get(v))
     [("If-None-Match", "etag"), ("If-Modified-Since", "date")]
     if h and h.get(v))
 
+# this version attempts to get around an issue with gevent < 1
+# where it will not work with mod_wsgi. Hopefully in version 1
+# it will work without this
+def asyncReq(q, urls_headers):
+     reqs = [async.get(u, prefetch=True, headers=h) for u, h in
+                urls_headers]
+     q.put(async.map(reqs))
+
 class PDFAppender(resources.Resource):
 
     # This assumes a query string is used where a pdfs param
@@ -27,6 +36,7 @@ class PDFAppender(resources.Resource):
     # Django will create a QueryDict with a pdfs attribute
     # containing all instances of the pdfs attributes used
     # in the query string
+
     def GET(self, request):
         # getlist here will return a list of all the query string paramaters
         # named 'pdfs'
@@ -53,9 +63,10 @@ class PDFAppender(resources.Resource):
         else:
             urls_headers = [(url, {}) for url in urls]
 
-        s = requests.session()
-        responses = [s.get(u, prefetch=True, headers=h) 
-                for u, h in urls_headers]
+        q = Queue()
+        p = Process(target=asyncReq, args=(q,urls_headers)
+        responses = q.get()
+        p.join()
 
         if cache_enabled: 
             self.cache_responses(responses, cache)
