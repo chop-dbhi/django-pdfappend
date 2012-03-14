@@ -64,7 +64,7 @@ class PDFAppender(resources.Resource):
             urls_headers = [(url, {}) for url in urls]
 
         q = Queue()
-        p = Process(target=asyncReq, args=(q,urls_headers)
+        p = Process(target=asyncReq, args=(q,urls_headers))
         responses = q.get()
         p.join()
 
