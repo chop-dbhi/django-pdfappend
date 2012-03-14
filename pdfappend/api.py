@@ -7,7 +7,6 @@ from email.utils import parsedate_tz, mktime_tz
 from email.utils import formatdate
 import time
 import StringIO
-from requests import async
 from multiprocessing import Process, Queue
 
 cache_enabled = False
