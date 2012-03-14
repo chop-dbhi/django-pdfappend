@@ -25,9 +25,14 @@ headers = lambda h: dict((attr,h.get(v))
 # where it will not work with mod_wsgi. Hopefully in version 1
 # it will work without this
 def asyncReq(q, urls_headers):
+     from requests import async
      reqs = [async.get(u, prefetch=True, headers=h) for u, h in
                 urls_headers]
-     q.put(async.map(reqs))
+     responses = async.map(reqs)
+     q.put([{'url': r.url,
+             'status_code': r.status_code,
+             'headers': r.headers,
+             'content': r.content} for r in responses])
 
 class PDFAppender(resources.Resource):
 
