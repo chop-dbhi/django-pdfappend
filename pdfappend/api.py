@@ -8,7 +8,7 @@ from email.utils import formatdate
 import time
 import StringIO
 from requests import async
-from multiprocess import Process, Queue
+from multiprocessng import Process, Queue
 
 cache_enabled = False
 if settings.CACHES.has_key("pdfappend"):
