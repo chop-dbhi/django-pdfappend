@@ -119,7 +119,7 @@ class PDFAppender(resources.Resource):
                 cache.set(r.request.url,
                     {
                         'expires': True,
-                        'data': response.content
+                        'data': r.content
                     },
                     mktime_tz(parsedate_tz(r.headers['Expires'])) -
                     time.time())
