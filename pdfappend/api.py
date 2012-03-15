@@ -5,11 +5,18 @@ from django.http import HttpResponse
 from pyPdf import PdfFileWriter, PdfFileReader
 from email.utils import parsedate_tz, mktime_tz
 from email.utils import formatdate
+from urlparse import urlparse
+import Queue
 import time
 import StringIO
-import requests
+import urllib3
+import workerpool
+
+CONNECTIONS_PER_HOST=6
+MAX_THREADS = 12
 
 cache_enabled = False
+
 if settings.CACHES.has_key("pdfappend"):
     cache_enabled = True
 
@@ -20,13 +27,27 @@ headers = lambda h: dict((attr,h.get(v))
     [("If-None-Match", "etag"), ("If-Modified-Since", "date")]
     if h and h.get(v))
 
-class PDFAppender(resources.Resource):
 
+
+class GetFile(workerpool.Job):
+    def __init__(self, queue, connection_pool, url, headers):
+        self.queue = queue
+        self.pool = connection_pool
+        self.url = url
+        self.headers = headers
+
+    def run(self):
+        response = self.pool.request("GET", url, headers=self.headers)
+        queue.put((url, response))
+
+
+class PDFAppender(resources.Resource):
     # This assumes a query string is used where a pdfs param
     # is repeatedly used for each PDF we need to concat.
     # Django will create a QueryDict with a pdfs attribute
     # containing all instances of the pdfs attributes used
     # in the query string
+
     def GET(self, request):
         # getlist here will return a list of all the query string paramaters
         # named 'pdfs'
@@ -37,6 +58,8 @@ class PDFAppender(resources.Resource):
             urls = []
             for key, value in items:
                urls.append(value)
+
+        hosts = self.sortByHost(urls)
 
         if cache_enabled:
             cache = get_cache('pdfappend')
@@ -53,9 +76,18 @@ class PDFAppender(resources.Resource):
         else:
             urls_headers = [(url, {}) for url in urls]
 
-        s = requests.session()
-        responses = [s.get(u, prefetch=True, headers=h) 
-                for u, h in urls_headers]
+        hosts = self.sortByHost(urls_headers)
+
+        # A couple of things here. If we have more than 1 host, we will spawn 
+        # a thread, but if there is only one host, we may refrain depending on 
+        # the following:
+        # If connections per host is 1, we won't spawn a thread
+        # If there are <= 3 URLS being requested, we will not spawn a thread, 
+        # just use a keepalive HTTP session and make the requests sequentially
+        if (len(hosts)>1 or len(hosts[0]) > 3):
+            self.getConcurrently(hosts)
+        else:
+            self.getSequential(hosts[0])
 
         if cache_enabled: 
             self.cache_responses(responses, cache)
@@ -68,9 +100,9 @@ class PDFAppender(resources.Resource):
         for url in urls:
             if cache_enabled:
                 if urls_needed.has_key(url):
-                    if response_cache[url].status_code == 200:
-                        bytes = response_cache[url].content
-                    elif response_cache[url].status_code == 304:
+                    if response_cache[url].status == 200:
+                        bytes = response_cache[url].data
+                    elif response_cache[url].status == 304:
                         bytes = urls_cache[url]['data']
                     else:
                         # Log a failed response?
@@ -79,10 +111,10 @@ class PDFAppender(resources.Resource):
                     bytes = urls_cache[url]['data']
             else:
                 # Verify request succeeded
-                if not response_cache[url].status_code == 200:
+                if not response_cache[url].status == 200:
                     # Log failed response?
                     continue
-                bytes = response_cache[url].content
+                bytes = response_cache[url].data
 
             # pyPDF needs a file like object
             input = PdfFileReader(StringIO.StringIO(bytes))
@@ -96,21 +128,59 @@ class PDFAppender(resources.Resource):
         return output
 
     def cache_responses(self, responses, cache):
-        cacheable = [r for r in responses if r.status_code == 200]
-        for r in cacheable:
+        cacheable = [(u, r) for u, r in responses if r.status == 200]
+        for u, r in cacheable:
             obj = {}
             if r.headers['Expires']:
-                cache.set(r.request.url,
-                    {
-                        'expires': True,
-                        'data': response.content
+                cache.set(u, {
+                    'expires': True,
+                    'data': r. data
                     },
                     mktime_tz(parsedate_tz(r.headers['Expires'])) -
-                    time.time())
+                    time.time()
+                )
             else:
-                cache.set(r.request.url,
-                    {
-                        'data':r.content,
-                        'etag':r.headers['Etag'],
-                        'date':formatdate()
-                    })
+                cache.set(u, {
+                    'data':r.data,
+                    'etag':r.headers.get('Etag', None),
+                    'date':formatdate()
+                })
+
+
+    def sortByHost(self, urls_headers):
+        hosts = {}
+        for url, header in urls_headers:
+            parts = urlparse(url)
+            hosts.setdefault(parts.netloc, []).append((url,header))
+        return hosts.items()
+
+    def getConcurrent(self, hosts):
+        job_pool = workerpool.WorkerPool(size=MAX_THREADS)
+        results = Queue.Queue()
+
+        for host in hosts:
+            conn_pool = urllib3.connection_from_url(host[0][0],
+                    max_size=CONNECTIONS_PER_HOST)
+            for url, headers in hosts:
+                job = GetFile(results, conn_pool, url, headers)
+                job.put(job)
+
+        job_pool.shutdown()
+        job_pool.join()
+
+        responses = []
+        while (!results.empty()):
+            responses.append(results.get())
+        return responses
+
+    def getSequential(self, urls_headers):
+        conn_pool = urllib3.connection_from_url(url_headers[0][0],
+                max_size=CONNECTIONS_PER_HOST)
+        responses = []
+
+        for url, headers in url_headers:
+            responses.append(conn_pool.request("GET", url, headers=headers))
+        return responses
+
+
+
