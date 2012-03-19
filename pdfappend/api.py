@@ -90,7 +90,7 @@ class PDFAppender(resources.Resource):
         if cache_enabled: 
             self.cache_responses(responses, cache)
 
-        response_cache = dict((r.request.url, r) for r in responses)
+        response_cache = dict((u, r) for u,r in responses)
 
         master_pdf = PdfFileWriter()
 
@@ -177,7 +177,8 @@ class PDFAppender(resources.Resource):
         responses = []
 
         for url, headers in urls_headers:
-            responses.append(conn_pool.request("GET", url, headers=headers))
+            responses.append((url, conn_pool.request("GET", url,
+                headers=headers)))
         return responses
 
 
