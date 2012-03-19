@@ -161,7 +161,7 @@ class PDFAppender(resources.Resource):
                     maxsize=CONNECTIONS_PER_HOST)
             for url, headers in host:
                 job = GetFile(results, conn_pool, url, headers)
-                job.put(job)
+                job_pool.put(job)
 
         job_pool.shutdown()
         job_pool.join()
