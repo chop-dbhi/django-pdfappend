@@ -59,8 +59,6 @@ class PDFAppender(resources.Resource):
             for key, value in items:
                urls.append(value)
 
-        hosts = self.sortByHost(urls)
-
         if cache_enabled:
             cache = get_cache('pdfappend')
             # Create dictionary of url:<cache value>
