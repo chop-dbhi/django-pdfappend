@@ -12,7 +12,13 @@ import StringIO
 import urllib3
 import workerpool
 
-CONNECTIONS_PER_HOST=6
+# If only requesting pdfs from one host
+# number requests above which threading
+# will be enabled
+CONCURRENCY_THRESHOLD = 3
+# Maximum number of simultaneous connections to a single
+CONNECTIONS_PER_HOST = 6
+# Maximum threads to be used simultaneously for a request
 MAX_THREADS = 12
 
 cache_enabled = False
@@ -82,7 +88,7 @@ class PDFAppender(resources.Resource):
         # If connections per host is 1, we won't spawn a thread
         # If there are <= 3 URLS being requested, we will not spawn a thread, 
         # just use a keepalive HTTP session and make the requests sequentially
-        if (len(hosts)>1 or len(hosts[0]) > 3):
+        if (len(hosts) > 1 or len(hosts[0]) > CONCURRENCY_THRESHOLD):
             responses = self.getConcurrent(hosts)
         else:
             responses = self.getSequential(hosts[0])
