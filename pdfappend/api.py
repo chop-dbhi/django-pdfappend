@@ -172,11 +172,11 @@ class PDFAppender(resources.Resource):
         return responses
 
     def getSequential(self, urls_headers):
-        conn_pool = urllib3.connection_from_url(url_headers[0][0],
+        conn_pool = urllib3.connection_from_url(urls_headers[0][0],
                 max_size=CONNECTIONS_PER_HOST)
         responses = []
 
-        for url, headers in url_headers:
+        for url, headers in urls_headers:
             responses.append(conn_pool.request("GET", url, headers=headers))
         return responses
 
