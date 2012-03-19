@@ -14,9 +14,8 @@ You may also use numbered parameters (starting at 0) instead of a single pdfs ar
 ##  Features
 1. Local caching of retrieved pdfs using the django file system cache
     1. Respects Expires tags
-    1. Uses If-modified-since or If-none-match (Etag support)
-1. Supports concurrent requests using urllib3 connections pools and
-   the workerpool module. Configurable max_threads and max_connections_per_host
+    1. Uses If-Modified-Since or If-None-Match (Etag support)
+1. Supports concurrent requests using urllib3 connection pools and the workerpool library. Configurable max_threads and max_connections_per_host
     1. Requests for pdfs across more than one server will automatically be threaded. Requests to a single server will be threaded once the number of requests rises above a configurable threshold.
 
 ## Note
