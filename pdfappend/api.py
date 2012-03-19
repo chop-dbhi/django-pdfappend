@@ -158,7 +158,7 @@ class PDFAppender(resources.Resource):
 
         for host in hosts:
             conn_pool = urllib3.connection_from_url(host[0][0],
-                    max_size=CONNECTIONS_PER_HOST)
+                    maxsize=CONNECTIONS_PER_HOST)
             for url, headers in hosts:
                 job = GetFile(results, conn_pool, url, headers)
                 job.put(job)
@@ -173,7 +173,7 @@ class PDFAppender(resources.Resource):
 
     def getSequential(self, urls_headers):
         conn_pool = urllib3.connection_from_url(urls_headers[0][0],
-                max_size=CONNECTIONS_PER_HOST)
+                maxsize=CONNECTIONS_PER_HOST)
         responses = []
 
         for url, headers in urls_headers:
