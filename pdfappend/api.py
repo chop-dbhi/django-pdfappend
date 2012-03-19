@@ -169,7 +169,7 @@ class PDFAppender(resources.Resource):
         job_pool.join()
 
         responses = []
-        while (!results.empty()):
+        while (not results.empty()):
             responses.append(results.get())
         return responses
 
