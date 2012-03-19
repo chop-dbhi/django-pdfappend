@@ -83,7 +83,7 @@ class PDFAppender(resources.Resource):
         # If there are <= 3 URLS being requested, we will not spawn a thread, 
         # just use a keepalive HTTP session and make the requests sequentially
         if (len(hosts)>1 or len(hosts[0]) > 3):
-            responses = self.getConcurrently(hosts)
+            responses = self.getConcurrent(hosts)
         else:
             responses = self.getSequential(hosts[0])
 
