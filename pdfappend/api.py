@@ -38,7 +38,7 @@ class GetFile(workerpool.Job):
 
     def run(self):
         response = self.pool.request("GET", self.url, headers=self.headers)
-        queue.put((self.url, response))
+        self.queue.put((self.url, response))
 
 
 class PDFAppender(resources.Resource):
