@@ -157,9 +157,9 @@ class PDFAppender(resources.Resource):
         results = Queue.Queue()
 
         for host in hosts:
-            conn_pool = urllib3.connection_from_url(hosts[0][0],
+            conn_pool = urllib3.connection_from_url(host[0][0],
                     maxsize=CONNECTIONS_PER_HOST)
-            for url, headers in hosts:
+            for url, headers in host:
                 job = GetFile(results, conn_pool, url, headers)
                 job.put(job)
 
