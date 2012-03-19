@@ -150,14 +150,14 @@ class PDFAppender(resources.Resource):
         for url, header in urls_headers:
             parts = urlparse(url)
             hosts.setdefault(parts.netloc, []).append((url,header))
-        return hosts.items()
+        return hosts.values()
 
     def getConcurrent(self, hosts):
         job_pool = workerpool.WorkerPool(size=MAX_THREADS)
         results = Queue.Queue()
 
         for host in hosts:
-            conn_pool = urllib3.connection_from_url(host[0][0],
+            conn_pool = urllib3.connection_from_url(hosts[0][0],
                     maxsize=CONNECTIONS_PER_HOST)
             for url, headers in hosts:
                 job = GetFile(results, conn_pool, url, headers)
