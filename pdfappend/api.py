@@ -9,7 +9,8 @@ from urlparse import urlparse
 import Queue
 import time
 import StringIO
-import urllib3
+from urllib3 import connection_from_url, PoolManager
+from urllib3.connectionpool import HostChangedError
 import workerpool
 
 # If only requesting pdfs from one host
@@ -43,7 +44,13 @@ class GetFile(workerpool.Job):
         self.headers = headers
 
     def run(self):
-        response = self.pool.request("GET", self.url, headers=self.headers)
+        try: 
+           response = self.pool.request("GET", self.url, headers=self.headers)
+        except HostChangedError, e:
+           # Redirect, give up on managing resources ourselves, just get the
+           # file
+           managed_pool = PoolManager(1)
+           response = managed_pool.request('GET', e.url, headers = headers)
         self.queue.put((self.url, response))
 
 
@@ -163,7 +170,7 @@ class PDFAppender(resources.Resource):
         results = Queue.Queue()
 
         for host in hosts:
-            conn_pool = urllib3.connection_from_url(host[0][0],
+            conn_pool = connection_from_url(host[0][0],
                     maxsize=CONNECTIONS_PER_HOST)
             for url, headers in host:
                 job = GetFile(results, conn_pool, url, headers)
@@ -178,13 +185,19 @@ class PDFAppender(resources.Resource):
         return responses
 
     def getSequential(self, urls_headers):
-        conn_pool = urllib3.connection_from_url(urls_headers[0][0],
+        conn_pool = connection_from_url(urls_headers[0][0],
                 maxsize=CONNECTIONS_PER_HOST)
         responses = []
 
         for url, headers in urls_headers:
-            responses.append((url, conn_pool.request("GET", url,
-                headers=headers)))
+            try:
+                response = conn_pool.request("GET", url, headers = headers)
+            except HostChangedError, e:
+               # Redirect, give up on managing resources ourselves, just get the
+               # file
+               managed_pool = PoolManager(1)
+               response = managed_pool.request('GET', e.url, headers = headers)
+            responses.append((url, response))
         return responses
 
 
