@@ -8,7 +8,7 @@ from email.utils import formatdate
 from urlparse import urlparse
 import Queue
 import time
-import StringIO
+from StringIO import StringIO
 from urllib3 import connection_from_url, PoolManager
 from urllib3.connectionpool import HostChangedError
 import workerpool
@@ -50,7 +50,7 @@ class GetFile(workerpool.Job):
            # Redirect, give up on managing resources ourselves, just get the
            # file
            managed_pool = PoolManager(1)
-           response = managed_pool.request('GET', e.url, headers = headers)
+           response = managed_pool.request('GET', e.url, headers = self.headers)
         self.queue.put((self.url, response))
 
 
@@ -112,23 +112,23 @@ class PDFAppender(resources.Resource):
             if cache_enabled:
                 if urls_needed.has_key(url):
                     if response_cache[url].status == 200:
-                        bytes = response_cache[url].data
+                        raw_bytes = response_cache[url].data
                     elif response_cache[url].status == 304:
-                        bytes = urls_cache[url]['data']
+                        raw_bytes = urls_cache[url]['data']
                     else:
                         # Log a failed response?
                         continue
                 else:
-                    bytes = urls_cache[url]['data']
+                    raw_bytes = urls_cache[url]['data']
             else:
                 # Verify request succeeded
                 if not response_cache[url].status == 200:
                     # Log failed response?
                     continue
-                bytes = response_cache[url].data
+                raw_bytes = response_cache[url].data
 
             # pyPDF needs a file like object
-            input = PdfFileReader(StringIO.StringIO(bytes))
+            input = PdfFileReader(StringIO(raw_bytes))
 
             # Add this whole PDF to the master PDF
             for page_no in range(0, input.numPages):
