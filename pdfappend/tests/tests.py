@@ -20,8 +20,27 @@ def pdfNumPages(content):
 class PDFTestNoCache(testserver.HTTPDummyPDFServerTestCase):
     c = Client()
 
+    # Request two pdfs using the pdfN paramater
+    # pdf0..pdfN params
+    # PDF urls do not contain query string
+    def test_2_pdfN(self):
+        response = self.c.get("/api/?pdf0=http://%s:%d/pdf1&pdf1=http://%s:%d/pdf2" 
+                % ((self.host,self.port) * 2), follow = True, HTTP_ACCEPT="application/*")
+
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(pdfNumPages(response.content), 2)
+
+    # Request two pdfs using the pdfN paramater
+    # pdf0..pdfN params
+    # PDF urls do not contain query string
+    def test_2_pdfN_error(self):
+        response = self.c.get("/api/?pdf0=http://%s:%d/pdff&pdfr=http://%s:%d/pdf2" 
+                % ((self.host,self.port) * 2), follow = True, HTTP_ACCEPT="application/*")
+
+        self.assertEquals(response.status_code, 400)
+
     # Request two pdfs using the pdfs paramater, as opposed to number
-    # pdf1..pdfN params
+    # pdf0..pdfN params
     # PDF urls contain query string
     def test_2_pdfs_qs(self):
         response = self.c.get("/api/?pdfs=http://%s:%d/pdf?file=one.pdf&pdfs=http://%s:%d/pdf?file=two.pdf"
@@ -31,7 +50,7 @@ class PDFTestNoCache(testserver.HTTPDummyPDFServerTestCase):
         self.assertEquals(pdfNumPages(response.content), 2)
 
     # Request two pdfs using the pdfs paramater, as opposed to number
-    # pdf1..pdfN params
+    # pdf0..pdfN params
     # PDF urls do not contain query string
     def test_2_pdfs(self):
         response = self.c.get("/api/?pdfs=http://%s:%d/pdf1&pdfs=http://%s:%d/pdf2" 

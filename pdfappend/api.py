@@ -1,26 +1,38 @@
 from django.conf import settings
 from django.core.cache import get_cache
 from restlib import resources
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from pyPdf import PdfFileWriter, PdfFileReader
 from email.utils import parsedate_tz, mktime_tz
 from email.utils import formatdate
 from urlparse import urlparse
-import Queue
-import time
 from StringIO import StringIO
 from urllib3 import connection_from_url, PoolManager
 from urllib3.connectionpool import HostChangedError
 import workerpool
+import Queue
+import time
+import re
 
 # If only requesting pdfs from one host
 # number requests above which threading
 # will be enabled
-CONCURRENCY_THRESHOLD = 3
+try:
+    CONCURRENCY_THRESHOLD = settings.PDFAPPEND_CONCURRENCY_THRESHOLD
+except:
+    CONCURRENCY_THRESHOLD = 3
+
 # Maximum number of simultaneous connections to a single
-CONNECTIONS_PER_HOST = 6
+try:
+    CONNECTIONS_PER_HOST = settings.PDFAPPEND_CONNECTIONS_PER_HOST
+except:
+    CONNECTIONS_PER_HOST = 6
+
 # Maximum threads to be used simultaneously for a request
-MAX_THREADS = 12
+try:
+    MAX_THREADS = settings.PDFAPPEND_MAX_THREADS
+except:
+    MAX_THREADS = 12
 
 cache_enabled = False
 
@@ -33,8 +45,6 @@ headers = lambda h: dict((attr,h.get(v))
     for attr, v in
     [("If-None-Match", "etag"), ("If-Modified-Since", "date")]
     if h and h.get(v))
-
-
 
 class GetFile(workerpool.Job):
     def __init__(self, queue, connection_pool, url, headers):
@@ -53,7 +63,6 @@ class GetFile(workerpool.Job):
            response = managed_pool.request('GET', e.url, headers = self.headers)
         self.queue.put((self.url, response))
 
-
 class PDFAppender(resources.Resource):
     # This assumes a query string is used where a pdfs param
     # is repeatedly used for each PDF we need to concat.
@@ -61,13 +70,18 @@ class PDFAppender(resources.Resource):
     # containing all instances of the pdfs attributes used
     # in the query string
 
+    extract_num = re.compile(r'[a-zA-z]+(\d+)')
+
     def GET(self, request):
         # getlist here will return a list of all the query string paramaters
         # named 'pdfs'
         urls = request.GET.getlist("pdfs")
         if not urls:
             items = request.GET.items()
-            items.sort(key=lambda x: x[0])
+            try:
+                items.sort(key=lambda x:int(self.extract_num.match(x[0]).group(1)))
+            except:
+                return HttpResponseBadRequest("Invalid query string.")
             urls = []
             for key, value in items:
                urls.append(value)

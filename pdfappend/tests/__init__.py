@@ -1,2 +1,2 @@
-from coretest import *
+from tests import *
 

@@ -4,7 +4,6 @@
 #
 #     pip install -U -r requirements.pip
 
-# You may need to install libevent-dev
 # Core requirements
 django
 pypdf

@@ -8,8 +8,7 @@ pdf will be returned
 ```
 api/?pdfs%3Dhttp%3A%2F%2Fyourcontentsite.com%2Fpdf1.pdf%26pdfs%3Dhttp%3A%2F%2Fyourcontentsite%2Fpdf2.pdf
 ```
-
-You may also use numbered parameters (starting at 0) instead of a single pdfs argument (but not both).
+You may also use numbered pdf parameters starting at 0 (pdf0...pdfN) instead of a single pdfs argument (but not both).
 
 ##  Features
 1. Local caching of retrieved pdfs using the django file system cache
@@ -19,5 +18,13 @@ You may also use numbered parameters (starting at 0) instead of a single pdfs ar
     1. Requests for pdfs across more than one server will automatically be threaded. Requests to a single server will be threaded once the number of requests rises above a configurable threshold.
 
 ## Note
-1. While using numbered parameters, going past 9 parameters will break the pdf order in the final pdf.
 1. Was going to use the Python Requests library however the async module uses gevent and this was not playing well with mod_wsgi (even in the beta version of gevent 1.0). The more common use would be to run django in gunicorn or uwsgi but that was not an option. See the sequentialsession branch for a version that uses the Requests Library. You will need gevent (and libevent).
+
+## Test coverage
+Currently at ~80% test coverage. Using dummyserver implementation from urllib3.  This allows each unittest to have it's own supporting tornado web server.
+
+## TODO
+
+Unittest:
+1. Threading for requests from more than one servers.
+1. Caching.
