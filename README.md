@@ -25,6 +25,9 @@ To run behind an nginx reverse proxy:
 
     docker run -d -e FORCE_SCRIPT_NAME=/pdfappend -e SECRET_KEY=<DJANGO_SECRET_KEY> pdf
 
+### Mandatory Environment Variables
+
+* SECRET_KEY: Set your Django secret key
 
 ### Optional Environment Variables
 
