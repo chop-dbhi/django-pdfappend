@@ -1,6 +1,7 @@
 from elasticsearch import Elasticsearch
 from datetime import datetime
 import logging
+import os
 
 def get_env_variable(var_name, default=None):
     """ Get the environment variable or return an exception"""
