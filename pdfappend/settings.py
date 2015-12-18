@@ -76,5 +76,5 @@ if bool(get_env_variable('LOGGING_ENABLED', 0)):
             'port':int(get_env_variable('ELASTICSEARCH_PORT', 9200)),
             'formatter': 'verbose'
         }
-        LOGGING['loggers']['pdfappend']['handers'].append('es')
+        LOGGING['loggers']['pdfappend']['handlers'].append('es')
         
