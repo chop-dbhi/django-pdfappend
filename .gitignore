@@ -2,5 +2,6 @@
 .DS_Store
 MANIFEST
 dist
-env_var
-env_var_*
+env_vars
+env_vars_*
+docker-compose.yml

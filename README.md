@@ -37,3 +37,4 @@ To run behind an nginx reverse proxy:
 * ELASTICSEARCH_PORT: Override default Elasticsearch port of 9200
 * ELASTICSEARCH_INDEX: Set the index to log to on Elasticsearch. Defaults to "pdfappend"
 * FORCE_SCRIPT_NAME: The endpoint on the server to mount the service
+* APP_ENV: Environment this app is running in. Defaults to "unspecified"
