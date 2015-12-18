@@ -23,4 +23,4 @@ To run a standalone webserver:
     
 To run behind an nginx reverse proxy:
 
-    docker run -d -e FORCE_SCRIPT_NAME=/pdfappend pdf -e SECRET_KEY=<DJANGO_SECRET_KEY>
+    docker run -d -e FORCE_SCRIPT_NAME=/pdfappend -e SECRET_KEY=<DJANGO_SECRET_KEY> pdf
