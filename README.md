@@ -28,7 +28,7 @@ To run behind an nginx reverse proxy:
 ### Mandatory Environment Variables
 
 * SECRET_KEY: Set your Django secret key
-* ALLOWED_HOST: Set the host this Django instance can serve. Default is "*" , which may not be desirable from a security perspective.
+* ALLOWED_HOST: Set the host this Django instance can serve. Default is "*", which may not be desirable from a security perspective.
 
 ### Optional Environment Variables
 * DJANGO_DEBUG: Django debug mode. Default is False.
