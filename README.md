@@ -12,3 +12,15 @@ You may also use numbered pdf parameters starting at 0 (pdf0...pdfN) instead of 
 
 
 This is currently setup to run as a standalone service in Docker.
+
+To build it:
+
+    docker build -t pdf .
+
+To run a standalone webserver:
+
+    docker run -d -p 8000:8000 -e SECRET_KEY=<DJANGO_SECRET_KEY> pdf /opt/app/scripts/uwsgi.sh
+    
+To run behind an nginx reverse proxy:
+
+    docker run -d -e FORCE_SCRIPT_NAME=/pdfappend pdf -e SECRET_KEY=<DJANGO_SECRET_KEY>
