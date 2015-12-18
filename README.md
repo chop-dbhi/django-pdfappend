@@ -28,8 +28,8 @@ To run behind an nginx reverse proxy:
 
 Environment Variables
 
-LOGGING_ENABLED: Enable logging to the console
-ELASTICSEARCH__HOST: Enable logging to an Elasticsearch server
-ELASTICSEARCH__PORT: Override default Elasticsearch port of 9200
-ELASTICSEARCH__INDEX: Set the index to log to on Elasticsearch. Defaults to "pdfappend"
-FORCE__SCRIPT__NAME: The endpoint on the server to mount the service
+* LOGGING_ENABLED: Enable logging to the console
+* ELASTICSEARCH_HOST: Enable logging to an Elasticsearch server
+* ELASTICSEARCH_PORT: Override default Elasticsearch port of 9200
+* ELASTICSEARCH_INDEX: Set the index to log to on Elasticsearch. Defaults to "pdfappend"
+* FORCE_SCRIPT_NAME: The endpoint on the server to mount the service
