@@ -2,3 +2,5 @@
 .DS_Store
 MANIFEST
 dist
+env_var
+env_var_*
