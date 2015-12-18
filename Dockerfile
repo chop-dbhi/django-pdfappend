@@ -21,6 +21,7 @@ RUN apt-get install -y\
 RUN pip install Django
 RUN pip install uwsgi
 RUN pip install requests_futures
+RUN pip install elasticsearch
 RUN pip install git+https://github.com/mstamy2/PyPDF2.git
 
 ADD . /opt/app

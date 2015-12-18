@@ -24,3 +24,12 @@ To run a standalone webserver:
 To run behind an nginx reverse proxy:
 
     docker run -d -e FORCE_SCRIPT_NAME=/pdfappend -e SECRET_KEY=<DJANGO_SECRET_KEY> pdf
+
+
+Environment Variables
+
+LOGGING_ENABLED: Enable logging to the console
+ELASTICSEARCH__HOST: Enable logging to an Elasticsearch server
+ELASTICSEARCH__PORT: Override default Elasticsearch port of 9200
+ELASTICSEARCH__INDEX: Set the index to log to on Elasticsearch. Defaults to "pdfappend"
+FORCE__SCRIPT__NAME: The endpoint on the server to mount the service

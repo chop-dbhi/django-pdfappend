@@ -5,6 +5,9 @@ from io import BytesIO
 from requests_futures.sessions import FuturesSession
 import concurrent
 import re
+import logging
+
+logger = logging.getLogger('pdfappend')
 
 class PDFAppender(View):
     # This assumes a query string is used where a pdfs param
@@ -25,6 +28,7 @@ class PDFAppender(View):
             try:
                 items.sort(key=lambda x:int(self.extract_num.match(x[0]).group(1)))
             except:
+                logger.error("Bad query string: %s" % items, exc_info=True)
                 return HttpResponseBadRequest("Invalid query string")
             urls = []
             for key, value in items:
@@ -35,9 +39,14 @@ class PDFAppender(View):
         
         waiting  = [session.get(url, allow_redirects=True) for url in urls]
         
-        concurrent.futures.wait(waiting, timeout=None, return_when=concurrent.futures.ALL_COMPLETED)
+        complete, incomplete = concurrent.futures.wait(waiting, timeout=15, return_when=concurrent.futures.ALL_COMPLETED)
         
-        for f in waiting:
+        for f in complete:
+            error = f.exception()
+            if error != None:
+                logger.error("Error retrieving url: %s" % error, exc_info=True)
+                continue
+            
             response = f.result()
             if response.status_code != 200:
                 print(response.status_code)
@@ -48,6 +57,9 @@ class PDFAppender(View):
             # Add this whole PDF to the master PDF
             for page_no in range(0, input.numPages):
                 master_pdf.addPage(input.getPage(page_no))
+        
+        for f in incomplete:
+            logger.error("Timeout retrieving url: %s" % f, exc_info=True)
 
         output = HttpResponse(content_type="application/pdf")
         master_pdf.write(output)
