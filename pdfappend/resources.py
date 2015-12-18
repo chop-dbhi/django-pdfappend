@@ -28,7 +28,7 @@ class PDFAppender(View):
             try:
                 items.sort(key=lambda x:int(self.extract_num.match(x[0]).group(1)))
             except:
-                logger.error("Bad query string: %s" % items, exc_info=True)
+                logger.error("Bad query string: %s" % items)
                 return HttpResponseBadRequest("Invalid query string")
             urls = []
             for key, value in items:
@@ -44,7 +44,7 @@ class PDFAppender(View):
         for f in complete:
             error = f.exception()
             if error != None:
-                logger.error("Error retrieving url: %s" % error, exc_info=True)
+                logger.error("Error retrieving url: %s" % error)
                 continue
             
             response = f.result()
@@ -59,7 +59,7 @@ class PDFAppender(View):
                 master_pdf.addPage(input.getPage(page_no))
         
         for f in incomplete:
-            logger.error("Timeout retrieving url: %s" % f, exc_info=True)
+            logger.error("Timeout retrieving url: %s" % f)
 
         output = HttpResponse(content_type="application/pdf")
         master_pdf.write(output)

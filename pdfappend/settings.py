@@ -9,10 +9,12 @@ def get_env_variable(var_name, default=None):
     except KeyError:
         return default
 
+ALLOWED_HOSTS = (get_env_variable("ALLOWED_HOST", "*"), )
+
 SECRET_KEY = get_env_variable("SECRET_KEY", "REPLACE_WITH_REAL_SECRET_KEY")
 
-
 DEBUG = bool(get_env_variable('DJANGO_DEBUG', False))
+
 INSTALLED_APPS = ('pdfappend',)
 
 FORCE_SCRIPT_NAME = get_env_variable('FORCE_SCRIPT_NAME', '')
@@ -22,6 +24,13 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+    },
+]
 
 ROOT_URLCONF = 'pdfappend.urls'
 
@@ -64,7 +73,7 @@ if bool(get_env_variable('LOGGING_ENABLED', 0)):
             'index':get_env_variable('ELASTICSEARCH_INDEX', 'pdfappend'),
             'class':'pdfappend.handlers.ESHandler',
             'host':get_env_variable('ELASTICSEARCH_HOST', ""),
-            'port':int(get_env_variable('ELASTICSEARCH_PORT', 9200),
+            'port':int(get_env_variable('ELASTICSEARCH_PORT', 9200)),
             'formatter': 'verbose'
         }
         LOGGING['loggers']['pdfappend']['handers'].append('es')
