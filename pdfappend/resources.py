@@ -33,11 +33,16 @@ class PDFAppender(View):
         session = FuturesSession(executor=concurrent.futures.ThreadPoolExecutor(max_workers=5))
         master_pdf = PdfFileWriter()
         
-        waiting  = [session.get(url, allow_redirects=True) for url in urls]
+        waiting  = [session.get(url, allow_redirects=True,) for url in urls]
         
-        concurrent.futures.wait(waiting, timeout=None, return_when=concurrent.futures.ALL_COMPLETED)
+        complete, incomplete = concurrent.futures.wait(waiting, timeout=None, return_when=concurrent.futures.ALL_COMPLETED)
         
-        for f in waiting:
+        for f in complete:
+            e = f.exception()
+            if e != None:
+                #TODO log
+                continue
+
             response = f.result()
             if response.status_code != 200:
                 print(response.status_code)
@@ -48,7 +53,11 @@ class PDFAppender(View):
             # Add this whole PDF to the master PDF
             for page_no in range(0, input.numPages):
                 master_pdf.addPage(input.getPage(page_no))
-
+        
+        for f in incomplete:
+            #TODO log
+            pass
+            
         output = HttpResponse(content_type="application/pdf")
         master_pdf.write(output)
         return output
