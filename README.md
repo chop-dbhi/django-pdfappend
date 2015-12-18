@@ -26,7 +26,7 @@ To run behind an nginx reverse proxy:
     docker run -d -e FORCE_SCRIPT_NAME=/pdfappend -e SECRET_KEY=<DJANGO_SECRET_KEY> pdf
 
 
-Environment Variables
+### Optional Environment Variables
 
 * LOGGING_ENABLED: Enable logging to the console
 * ELASTICSEARCH_HOST: Enable logging to an Elasticsearch server
