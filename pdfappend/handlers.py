@@ -25,6 +25,6 @@ class ESHandler(logging.Handler):
             index = self.index + n.strftime("%Y.%m.%d")
         else:
             index = self.index
-
-        self.es.index(index=index, doc_type="logs", body={"message": msg, "environment":self.env, "level":record.levelname.lower()})
+        date_time = n.strftime("%Y%m%d %H:%M:%S.%f")[:-3]
+        self.es.index(index=index, doc_type="logs", body={"message": msg, "date_time": date_time, "environment":self.env, "level":record.levelname.lower()})
  
