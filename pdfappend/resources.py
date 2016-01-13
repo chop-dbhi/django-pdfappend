@@ -41,6 +41,9 @@ class PDFAppender(View):
         
         complete, incomplete = concurrent.futures.wait(waiting, timeout=15, return_when=concurrent.futures.ALL_COMPLETED)
         
+        # Retain initial order
+        complete = sorted(complete, key=lambda x:waiting.index(x))
+        
         for f in complete:
             error = f.exception()
             if error != None:
