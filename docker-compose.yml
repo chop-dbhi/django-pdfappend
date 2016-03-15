@@ -1,0 +1,15 @@
+dev:
+  build: .
+  env_file: 
+      - env_vars_dev
+  restart: always
+test:
+  build: .
+  env_file: 
+      - env_vars_test
+  restart: always
+prod:
+  build: .
+  env_file: 
+      - env_vars
+  restart: always
